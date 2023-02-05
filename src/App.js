@@ -1,11 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
+import usePlacesAutocomplete from "use-places-autocomplete";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchLatLng } from "./features/history/historySlice";
 import "./App.css";
 
 const LIBRARIES = ["places"];
@@ -22,6 +21,8 @@ function Places() {
   });
 
   const [map, setMap] = useState(null);
+  const center = useSelector((state) => state.center);
+  const markers = useSelector((state) => state.markers);
 
   const onLoad = useCallback(function callback(map) {
     const bounds = new window.google.maps.LatLngBounds(center);
@@ -33,13 +34,10 @@ function Places() {
     setMap(null);
   }, []);
 
-  const [center, setCenter] = useState({ lat: 51, lng: 0 });
-  const [selected, setSelected] = useState(null);
-
   return isLoaded ? (
     <>
       <div className="places-container">
-        <PlacesAutocomplete setSelected={setSelected} setCenter={setCenter} />
+        <PlacesAutocomplete />
       </div>
 
       <GoogleMap
@@ -49,7 +47,8 @@ function Places() {
         onLoad={onLoad}
         onUnmount={onUnmount}
       >
-        {selected && <Marker position={selected} />}
+        {markers.length > 0 &&
+          markers.map((marker) => <Marker position={marker} />)}
       </GoogleMap>
     </>
   ) : (
@@ -57,7 +56,7 @@ function Places() {
   );
 }
 
-const PlacesAutocomplete = ({ setSelected, setCenter }) => {
+const PlacesAutocomplete = () => {
   const {
     ready,
     value,
@@ -70,31 +69,32 @@ const PlacesAutocomplete = ({ setSelected, setCenter }) => {
     setValue(address, false);
     clearSuggestions();
 
-    const results = await getGeocode({ address });
-    const { lat, lng } = await getLatLng(results[0]);
-    setSelected({ lat, lng });
-    setCenter({ lat, lng });
+    let latlng = await dispatch(fetchLatLng(address));
   };
 
+  const dispatch = useDispatch();
+
   return (
-    <Autocomplete
-      disablePortal
-      id="combo-box-demo"
-      options={data.map(({ description }) => description)}
-      sx={{ width: 300 }}
-      renderInput={(params) => (
-        <TextField {...params} label="Search an address" />
-      )}
-      value={value}
-      onInputChange={(e, value) => {
-        setValue(value);
-      }}
-      onChange={(e, value) => {
-        handleSelect(value);
-      }}
-      disabled={!ready}
-      className="combobox-input"
-    />
+    <>
+      <Autocomplete
+        disablePortal
+        id="combo-box-demo"
+        options={data.map(({ description }) => description)}
+        sx={{ width: 300 }}
+        renderInput={(params) => (
+          <TextField {...params} label="Search an address" />
+        )}
+        value={value}
+        onInputChange={(e, value) => {
+          setValue(value);
+        }}
+        onChange={(e, value) => {
+          handleSelect(value);
+        }}
+        disabled={!ready}
+        className="combobox-input"
+      />
+    </>
   );
 };
 
