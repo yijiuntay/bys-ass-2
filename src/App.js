@@ -9,8 +9,8 @@ import "./App.css";
 
 const LIBRARIES = ["places"];
 const containerStyle = {
-  width: "400px",
-  height: "400px",
+  width: "800px",
+  height: "600px",
 };
 
 function Places() {
@@ -41,7 +41,7 @@ function Places() {
       </div>
 
       <GoogleMap
-        zoom={2}
+        zoom={5}
         center={center}
         mapContainerStyle={containerStyle}
         onLoad={onLoad}

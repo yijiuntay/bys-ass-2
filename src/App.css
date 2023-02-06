@@ -22,3 +22,7 @@ combobox-input {
   width: 100%;
   padding: 0.5rem;
 }
+
+.places-container {
+  padding: 30px 0;
+}
